@@ -14,6 +14,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Load the pickled model
 with open("crop_predictor.pkl", "rb") as f:
     crop_predictor = pickle.load(f)
@@ -28,11 +29,15 @@ class Crops(BaseModel):
     pH: float
     rain: float
 
+# Define the Pydantic model for response data
+class CropPredictionResponse(BaseModel):
+    prediction: float
+
 @app.get('/')
 def root():
     return {'message': 'Welcome to the Crop Prediction API'}
 
-@app.post('/predict', response_model=dict)
+@app.post('/predict', response_model=CropPredictionResponse)
 def predict_crop(data: Crops):
     """Route to make predictions using the model."""
     try:
