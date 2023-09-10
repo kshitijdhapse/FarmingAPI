@@ -2,8 +2,6 @@ import uvicorn
 import pickle
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-
 app = FastAPI()
 origins = ["*"]
 
@@ -19,30 +17,16 @@ app.add_middleware(
 with open("crop_predictor.pkl", "rb") as f:
     crop_predictor = pickle.load(f)
 
-# Define the Pydantic model for input data
-class Crops(BaseModel):
-    N: float
-    P: float
-    K: float
-    temp: float
-    hum: float
-    pH: float
-    rain: float
-
-# Define the Pydantic model for response data
-class CropPredictionResponse(BaseModel):
-    prediction: float
-
 @app.get('/')
 def root():
     return {'message': 'Welcome to the Crop Prediction API'}
 
-@app.post('/predict', response_model=CropPredictionResponse)
-def predict_crop(data: Crops):
+@app.post('/predict')
+def predict_crop(N: float, P: float, K: float, temp: float, hum: float, pH: float, rain: float):
     """Route to make predictions using the model."""
     try:
-        # Access data attributes directly from the Pydantic model
-        prediction = crop_predictor.predict([[data.N, data.P, data.K, data.temp, data.hum, data.pH, data.rain]])
+        # Access data attributes directly from the request
+        prediction = crop_predictor.predict([[N, P, K, temp, hum, pH, rain]])
         return {'prediction': prediction.tolist()[0]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
